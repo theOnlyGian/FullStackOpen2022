@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import axios from 'axios'
+import { useEffect, useState } from 'react'
 
 const Filter = ({ filter, onChange })=>{
   return(
@@ -27,10 +28,10 @@ const PersonForm = ({ addPhone, newName, handlePersonInput, newNumber, handleNum
   )
 }
 
-const Persons = ({notesToShow})=>{
+const Persons = ({personsToShow})=>{
   return(
     <div>
-      {notesToShow.map((person) => {
+      {personsToShow.map((person) => {
         return <li key={person.id}>{person.name} - {person.number}</li>
       })}
     </div>
@@ -49,7 +50,14 @@ const App = () => {
   const [newNumber, setNewNumber] = useState('')
   const [filter, setFilter] = useState('')
 
-  const notesToShow = filter ===''
+  useEffect((()=>{
+    const url = 'http://localhost:3001/persons'
+    axios
+    .get(url)
+    .then((response)=>setPersons(response.data))
+  }), [])
+
+  const personsToShow = filter ===''
   ? persons
   : persons.filter((person)=>{
     return person.name.toLowerCase().includes(filter.toLowerCase())
@@ -110,7 +118,7 @@ const App = () => {
       <h2>Add a new</h2>
       <PersonForm addPhone={addPhone} newName={newName} handlePersonInput={handlePersonInput} newNumber={newNumber} handleNumberInput={handleNumberInput}/>
       <h2>Numbers</h2>
-      <Persons notesToShow={notesToShow} />
+      <Persons personsToShow={personsToShow} />
     </div>
   )
 }
