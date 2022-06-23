@@ -1,0 +1,12 @@
+.message {
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.message.success {
+    border: solid 2px green;
+}
+
+.message.unsuccess {
+    border: solid 2px red;
+}

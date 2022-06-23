@@ -1,70 +1,22 @@
 import { useEffect, useState } from 'react'
-import personsService from './services/persons'
+import './index.css'
+import personsService from './services/Service'
+import Notification from './components/Notification'
+import PersonForm from './components/PersonForm'
+import Filter from './components/Filter'
+import Persons from './components/Persons'
 
-const Filter = ({ filter, onChange }) => {
-  return (
-    <div>
-      filter shown with
-      <input value={filter} onChange={onChange} />
-    </div>
-  )
-}
 
-const PersonForm = ({ addPhone, newName, handlePersonInput, newNumber, handleNumberInput }) => {
-  return (
-    <div>
-      <form onSubmit={addPhone}>
-        <div>
-          name: <input value={newName} onChange={handlePersonInput} />
-        </div>
-        <div>
-          number: <input value={newNumber} onChange={handleNumberInput} />
-        </div>
-        <div>
-          <button type="submit">add</button>
-        </div>
-      </form>
-    </div>
-  )
-}
 
-const Person = ({ person }) => {
-  const handleDelete = () => {
-    if (window.confirm('Do you really want to delete ' + person.name + '?')) {
-      personsService.delete(person.id)
-    }
-  }
-
-  return (
-    <>
-    <li>{person.name} - {person.number}</li>
-    <button onClick={handleDelete}>Delete</button>
-    </>
-  )
-}
-const Persons = ({ personsToShow }) => {
-  return (
-    <div>
-      {personsToShow.map((person) => {
-        return (
-          <Person key={person.id.toString()} person={person}/>
-        )
-      })}
-    </div>
-  )
-}
 const App = () => {
-  const [persons, setPersons] = useState([
-    {
-      name: 'Arto Hellas',
-      number: 123,
-      id: 1
-    }
-  ])
-
+  const [persons, setPersons] = useState([])
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [filter, setFilter] = useState('')
+  const [message, setMessage] = useState({
+    success:null,
+    content:''
+  })
 
   useEffect((() => {
     personsService.getAll().then((persons) => setPersons(persons))
@@ -115,12 +67,25 @@ const App = () => {
 
     if (!checkPersonIfAdded(newPerson)) {
       personsService.create(newPerson)
-        .then(response => setPersons(persons.concat(response)))
+        .then(response => {
+          setPersons(persons.concat(response))
+          setMessage({
+            success:true,
+            content:`Added ${response.name}`
+        })
+          setTimeout(()=>setMessage({success:null, content:''}), 3000)
+        })
+      
     } else {
       const id = persons.find((person) => { return person.name === newPerson.name }).id
       console.log(id)
       if (window.confirm((`${newName} is already added to phonebook, replace the old number with a new one?`))) {
         personsService.update(newPerson, id)
+        setMessage({
+          success: true,
+          content: `Number updated successfully`
+        })
+        setTimeout(() => setMessage({ success: null, content: '' }), 3000)
       }
 
     }
@@ -131,11 +96,12 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification message={message} />
       <Filter filter={filter} onChange={handleFilter} />
       <h2>Add a new</h2>
       <PersonForm addPhone={addPhone} newName={newName} handlePersonInput={handlePersonInput} newNumber={newNumber} handleNumberInput={handleNumberInput} />
       <h2>Numbers</h2>
-      <Persons personsToShow={personsToShow} />
+      <Persons personsToShow={personsToShow} setMessage={setMessage}/>
     </div>
   )
 }
