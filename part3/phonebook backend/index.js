@@ -49,14 +49,8 @@ app.delete('/api/phones/:id', (req, res, next)=>{
     .catch((error) => next(error))
 })
 
-app.post('/api/phones', (req, res)=>{
+app.post('/api/phones', (req, res, next)=>{
     const person = req.body
-    if (person.name === undefined || person.number === undefined) {
-         return res.status(400).json({
-             error: 'content missing'
-         })
-     }
-
     const id = Math.floor(Math.random() * 1000)
     const personAdded = new Person({
         name:person.name,
@@ -77,7 +71,8 @@ app.put('/api/phones/:id', (req, res)=>{
         number: body.number
     }
 
-    Person.findByIdAndUpdate(id, person, {new: true}).then((updatedNote=> res.json(updatedNote)))
+    Person.findByIdAndUpdate(id, person, { new: true, runValidators: true, context: 'query' })
+    .then((updatedNote=> res.json(updatedNote)))
 })
 
 app.listen(PORT, ()=>{
@@ -94,6 +89,10 @@ const errorHandler = (error, request, response, next) => {
 
     if (error.name === 'CastError') {
         return response.status(400).send({ error: 'malformatted id' })
+    }
+
+    if (error.name === 'ValidationError') {
+        return response.status(400).json({ error: error.message })
     }
 
     next(error)
